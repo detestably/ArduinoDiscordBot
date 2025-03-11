@@ -1,52 +1,33 @@
-const Discord = require('discord.js');
-const client = new Discord.Client();
+const { Client, Intents } = require('discord.js');
 const axios = require('axios');
 
+const client = new Client({ intents: [Intents.FLAGS.GUILDS, Intents.FLAGS.GUILD_MESSAGES] });
 const ARDUINO_IP = 'SEU_IP_DO_ARDUINO'; // Substitua pelo IP do Arduino
 const ARDUINO_PORT = 80; // Porta que o Arduino está escutando
 
-client.on('ready', () => {
+client.once('ready', () => {
     console.log(`Bot conectado como ${client.user.tag}`);
 });
 
-client.on('message', async message => {
-    if (message.author.bot) return; // Ignora mensagens de outros bots
+client.on('messageCreate', async (message) => {
+    if (message.author.bot || !message.content.startsWith('@arduino')) return;
 
-    if (message.content.startsWith('@arduino')) {
-        const args = message.content.split(' ');
-        const command = args[1];
-        const action = args.slice(2).join(' ');
+    const [command, ...args] = message.content.slice(8).trim().split(' ');
+    const action = args.join(' ');
 
-        try {
-            let response;
-            switch (command) {
-                case 'ligar':
-                    response = await sendCommandToArduino('ligar', action);
-                    break;
-                case 'desligar':
-                    response = await sendCommandToArduino('desligar', action);
-                    break;
-                case 'ajustar':
-                    response = await sendCommandToArduino('ajustar', action);
-                    break;
-                case 'status':
-                    response = await sendCommandToArduino('status', action);
-                    break;
-                default:
-                    response = 'Comando não reconhecido.';
-                    break;
-            }
-            message.reply(response);
-        } catch (error) {
-            message.reply('Erro ao enviar comando para o Arduino.');
-        }
+    try {
+        const response = await sendCommandToArduino(command, action);
+        message.reply(response);
+    } catch (error) {
+        console.error('Erro ao enviar comando:', error);
+        message.reply('Erro ao processar o comando.');
     }
 });
 
 async function sendCommandToArduino(command, action) {
     const url = `http://${ARDUINO_IP}:${ARDUINO_PORT}/comando`;
-    const response = await axios.post(url, { command, action });
-    return response.data;
+    const { data } = await axios.post(url, { command, action });
+    return data;
 }
 
 client.login('SEU_TOKEN_DO_BOT'); // Substitua pelo token do seu bot
