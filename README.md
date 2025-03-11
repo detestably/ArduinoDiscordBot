@@ -1,4 +1,4 @@
-# Automação da casa inteligente, usando de Arduino integrado ao Discord
+# Automação da casa inteligente, usando de Arduino junto ao Discord
 
 Este projeto permite controlar dispositivos de uma casa inteligente usando comandos enviados pelo Discord e executados por um Arduino.
 
